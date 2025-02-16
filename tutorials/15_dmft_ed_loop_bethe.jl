@@ -1,6 +1,9 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+# ENV["PROJECT_PATH_ED"]="../envs/KED"
+# include("../src/mybase.jl")
 
+using KaiEDJ
+using KaiEDJ: BenchmarkTools, Optimization, Optim, Plots
+using DelimitedFiles
 
 ######## Correlated Orbital Info #########
 norb    = 1
@@ -71,7 +74,7 @@ Hybiw   = deepcopy(Hybiw_init)
 ndmftloop   = 1
 for idmft in 1:ndmftloop
     init_println( "DMFT loop ($(idmft))" )
-    Gimpiw, G0impiw, Gnewiw, Hybiwnew, Selfiwnew, ebathlnew, Vilnew, GSSectorInfo = SolveEDBetheDegen( Hybiw, ebathl, Vil, ImFreqGrid, ntot, nspinorb, chem, opccaavec ; TolEGS=6e-5 )
+    Gimpiw, G0impiw, Gnewiw, Hybiwnew, Selfiwnew, ebathlnew, Vilnew, GSSectorInfo = KaiEDJ.SolveEDBetheDegen( Hybiw, ebathl, Vil, ImFreqGrid, ntot, nspinorb, chem, opccaavec ; TolEGS=6e-5 )
     global Hybiw    = Hybiwnew
     global ebathl   = deepcopy( ebathlnew )
     global Vil      = deepcopy( Vilnew )
@@ -88,7 +91,7 @@ for idmft in 1:ndmftloop
     ReFreqGridVal   = collect( LinRange( -10, 10, NReFreq ) )
     ReFreqGrid      = ReFreqGridVal .+ im * epsilon
     G0imp_w = GetGreenDiscGrid( ebathl, Vil, ReFreqGrid )
-    Gimpw, G0impw, Gneww, Hybwnew, Selfwnew, ebathldum, Vildum, GSSectorInfo = SolveEDBetheDegen( Hybiw, ebathl, Vil, ReFreqGrid, ntot, nspinorb, chem, opccaavec ; BathOpt=false, GSSectorInfo=GSSectorInfo )
+    Gimpw, G0impw, Gneww, Hybwnew, Selfwnew, ebathldum, Vildum, GSSectorInfo = KaiEDJ.SolveEDBetheDegen( Hybiw, ebathl, Vil, ReFreqGrid, ntot, nspinorb, chem, opccaavec ; BathOpt=false, GSSectorInfo=GSSectorInfo )
     SelfwUp  = GetijarrayFromVecMat( Selfwnew, 1, 1 )
     SelfwDn  = GetijarrayFromVecMat( Selfwnew, 2, 2 )
     GbethewUp    = GetGzBetheFromSelf( ReFreqGrid, SelfwUp )

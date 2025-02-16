@@ -1,5 +1,9 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+# ENV["PROJECT_PATH_ED"]="../envs/KED"
+# include("../src/mybase.jl")
+
+using KaiEDJ
+using KaiEDJ: I, BenchmarkTools, Optimization, Optim, Plots
+using DelimitedFiles
 
 
 ######## Correlated Orbital Info #########
@@ -101,10 +105,14 @@ selfdn  = GetSelf( g0impdn, gimpdn, chem )
 
 G0newimp    = GetGreenImpGrid( zeros(nspinorb,nspinorb), (D*D / 2. / 2. ) * Gimp, ImFreqGrid )
 
-using Plots
+# using Plots
 xdat    = ImFreqGridVal
-plot(  xdat, imag( GetijarrayFromVecMat(gbetheiw,1,1) ) )
-plot!( xdat, imag( GetijarrayFromVecMat(G0newimp,1,1) ) )
+Plots.plot(  xdat, imag( GetijarrayFromVecMat(gbetheiw,1,1) ) )
+Plots.plot!( xdat, imag( GetijarrayFromVecMat(G0newimp,1,1) ) )
+
+Plots.xlabel!("Frequency")
+Plots.ylabel!("Amplitude")
+Plots.savefig("14_dmft_ed_solver_bethe.png")
 
 ######## Lattice Green Function Construction #########
 # For Bethe lattice model,

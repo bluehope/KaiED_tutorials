@@ -1,5 +1,5 @@
-include("../src/mybase.jl")
-
+#include("../src/mybase.jl")
+using KaiEDJ
 
 println("\n######### PARAMETER SETUP ##########")
 norb    = 3

@@ -1,5 +1,7 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+# ENV["PROJECT_PATH_ED"]="../envs/KED"
+# include("../src/mybase.jl")
+using KaiEDJ
+using KaiEDJ: I , BenchmarkTools, Optimization, Plots
 
 norb        = 1
 nspin       = 2
@@ -68,19 +70,21 @@ SParam  = (
 #     return GetCost( HybwOrig, HybwParam )
 # end
 
-using BenchmarkTools
+# using BenchmarkTools
 @time cost = GetCostFromFlat( BParam, SParam )
 println( "initial cost : $(cost) " )
 
 
-using Optimization
-prob = OptimizationProblem(GetCostFromFlat, BParam, SParam)
-using OptimizationOptimJL
-@time sol = solve(prob, NelderMead(), maxiters=4000)
+# using Optimization
+using KaiEDJ.Optimization
+prob = KaiEDJ.Optimization.OptimizationProblem(GetCostFromFlat, BParam, SParam)
+# using OptimizationOptimJL
+using KaiEDJ.OptimizationOptimJL
+@time sol = KaiEDJ.OptimizationOptimJL.solve(prob, NelderMead(), maxiters=4000)
 @show sol.original
 
-using Optim
-@time res = optimize( x -> GetCostFromFlat(x,SParam), BParam, LBFGS(), Optim.Options(iterations=4000))
+using KaiEDJ.Optim
+@time res = KaiEDJ.Optim.optimize( x -> GetCostFromFlat(x,SParam), BParam, LBFGS(), KaiEDJ.Optim.Options(iterations=4000))
 @show res
 
 # lb  = [-20.0 for i in BParam ]
@@ -100,21 +104,21 @@ using Optim
 
 # BParamNew   = [ sol... ]  # From NelderMead
 BParamNew   = [ res.minimizer... ]    # From BFGS
-@time cost = GetCostFromFlat( BParamNew, SParam )
+@time cost = KaiEDJ.GetCostFromFlat( BParamNew, SParam )
 println( "final cost : $(cost) " )
 
-enew, vnew  = BathParamReshape( BParamNew, nbath )
+enew, vnew  = KaiEDJ.BathParamReshape( BParamNew, nbath )
 @show enew
 println("vnew :")
 using DelimitedFiles
 writedlm(stdout, vnew)
 
-DiwNew      = GetDeltaHybDiscGridFromFlat( BParamNew, ImFreqGrid, nspinorb, nbath )
-GiwNew      = GetGreenLocalFromHybGrid( DiwNew, ImFreqGrid, collect(I(nspinorb)*0.0) )
+DiwNew      = KaiEDJ.GetDeltaHybDiscGridFromFlat( BParamNew, ImFreqGrid, nspinorb, nbath )
+GiwNew      = KaiEDJ.GetGreenLocalFromHybGrid( DiwNew, ImFreqGrid, collect(I(nspinorb)*0.0) )
 
 x   = ImFreqGridVal
 y1  = Hyb11iw
-y2  = GetijarrayFromVecMat( DiwNew, 1, 1 ) 
+y2  = KaiEDJ.GetijarrayFromVecMat( DiwNew, 1, 1 )
 
 
 
@@ -125,19 +129,20 @@ epsilon = 0.04
 ReFreqGridVal   = collect( LinRange( -3, 3, NReFreq ) )
 ReFreqGrid      = ReFreqGridVal .+ im * epsilon
 
-Gw          = GetGzBethe.( ReFreqGrid )
-DwNew       = GetDeltaHybDiscGridFromFlat( BParamNew, ReFreqGrid, nspinorb, nbath )
-Gwn         = GetGreenLocalFromHybGrid( DwNew, ReFreqGrid, collect(I(nspinorb)*0.0) )
+Gw          = KaiEDJ.GetGzBethe.( ReFreqGrid )
+DwNew       = KaiEDJ.GetDeltaHybDiscGridFromFlat( BParamNew, ReFreqGrid, nspinorb, nbath )
+Gwn         = KaiEDJ.GetGreenLocalFromHybGrid( DwNew, ReFreqGrid, collect(I(nspinorb)*0.0) )
 
 bPlot = true
 if bPlot
-    using Plots
+    # using Plots
     xw  = ReFreqGridVal
-    gw  = Gw
-    gwn = GetijarrayFromVecMat( Gwn, 1, 1 ) 
+    gw  = KaiEDJ.GetijarrayFromVecMat( Gw, 1, 1 )
+    gwn = KaiEDJ.GetijarrayFromVecMat( Gwn, 1, 1 ) 
 
-    plot(  xw, [ real(gw)  imag(gw)  ] )
-    plot!( xw, [ real(gwn) imag(gwn) ] )
+    Plots.plot(  xw, [ real(gw)  imag(gw)  ], label="G (Gw)" )
+    Plots.plot!( xw, [ real(gwn) imag(gwn) ], label="G (Gwn)", xlabel="Frequency", ylabel="Green's function", title="Green's Function Comparison")
+    Plots.savefig("Green_Function_Comparison.png")
 end
 
 

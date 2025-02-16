@@ -1,4 +1,5 @@
-include("../src/mybase.jl")
+#include("../src/mybase.jl")
+using KaiEDJ
 
 ### Impurity Setup ###
 norb        = 1
@@ -37,7 +38,7 @@ for i in 1:nspinorb
     end
 end
 # @show Vil
-println( "Vil : " ) ; writedlm(stdout, Vil)
+println( "Vil : " ) ; KaiEDJ.writedlm(stdout, Vil)
 
 IndOrbUp    = [ i for i in 1:2:2*norb ]
 IndOrbDn    = [ i for i in 2:2:2*norb ]
@@ -45,8 +46,8 @@ IndBathUp   = [ i for i in 1:2:2*nbathHalf ]
 IndBathDn   = [ i for i in 2:2:2*nbathHalf ]
 VilUp   = Vil[ IndOrbUp, IndBathUp ]
 VilDn   = Vil[ IndOrbDn, IndBathDn ]
-println( "Vil Up : " ) ; writedlm(stdout, VilUp)
-println( "Vil Dn : " ) ; writedlm(stdout, VilDn)
+println( "Vil Up : " ) ; KaiEDJ.writedlm(stdout, VilUp)
+println( "Vil Dn : " ) ; KaiEDJ.writedlm(stdout, VilDn)
 
 
 
@@ -73,7 +74,7 @@ enew, vnew  = BathParamReshapePH( BParamUpPH, nbathHalf )
 println( "" )
 println( "Initial-parameters :")
 println( "ebathl after PH : $(enew)" ) 
-println( "Vil Up after PH : " ) ; writedlm(stdout, vnew)
+println( "Vil Up after PH : " ) ; KaiEDJ.writedlm(stdout, vnew)
 println( "" )
 SParam      = ( 
                 Hybiw, 
@@ -85,9 +86,9 @@ SParam      = (
 
 
 ### Optimizer ##
-using Optimization
+using KaiEDJ.Optimization
 prob = OptimizationProblem(GetCostFromFlatPH, BParamUpPH, SParam)
-using OptimizationOptimJL
+using KaiEDJ.OptimizationOptimJL
 maxiters = 2300
 sol = solve(prob, NelderMead() ; maxiters=maxiters)
 @show sol.original
@@ -96,7 +97,7 @@ BParamNew   = [ sol... ]
 enew, vnew  = BathParamReshapePH( BParamNew, nbathHalf )
 println("New parameters for Up")
 @show enew
-writedlm(stdout, vnew)
+KaiEDJ.writedlm(stdout, vnew)
 
 
 
@@ -125,7 +126,7 @@ BParamDnNew   = [ sol... ]
 ednnew, vdnnew  = BathParamReshapePH( BParamDnNew, nbathHalf )
 println("New parameters for Dn")
 @show ednnew
-writedlm(stdout, vdnnew)
+KaiEDJ.writedlm(stdout, vdnnew)
 
 println("New parameters in total")
 ebathl  = zero(ebathl)
@@ -137,7 +138,7 @@ Vil[ IndOrbUp, IndBathUp ]  = deepcopy(vnew)
 Vil[ IndOrbDn, IndBathDn ]  = deepcopy(vdnnew)
 Vil[ IndOrbDn, IndBathDn ]  = deepcopy(vnew)        ## Impose time-reversal sym naively
 @show ebathl
-writedlm(stdout, Vil)
+KaiEDJ.writedlm(stdout, Vil)
 
 
 
@@ -231,14 +232,14 @@ for opca in Op_tij
     ConstructHamil_ij!( H, opca, HashF, HashFInv ; outputlevel=outputlevel)
 end
 
-@show issparse(H.MatSparse)
+@show KaiEDJ.issparse(H.MatSparse)
 @show H.MatSparse
-@show ishermitian(H.MatSparse)
-@show issymmetric(H.MatSparse)
+@show KaiEDJ.ishermitian(H.MatSparse)
+@show KaiEDJ.issymmetric(H.MatSparse)
 @show count(!iszero, H.MatSparse)
 @show size(H.MatSparse)
 
-using Arpack
+using KaiEDJ.Arpack
 
 nev     = 10
 esAr    = eigs( H.MatSparse ; which=:SR , nev = nev )
@@ -253,7 +254,7 @@ println("diff : ", real(esAr[1] .- esAr[1][1]) )
 
 println("")
 println("Ground-states : ")
-println( format("nconv = {}, niter = {} , nmult = {}" ,esAr[3], esAr[4], esAr[5] ) )
+println( KaiEDJ.format("nconv = {}, niter = {} , nmult = {}" ,esAr[3], esAr[4], esAr[5] ) )
 nconvAr = esAr[3]
 gsarr   = Vector{Any}(undef,nconvAr)
 OpSz        = GetOpSz(ntot)
@@ -263,18 +264,18 @@ Szorbval    = Vector{ComplexF64}(undef,nconvAr)
 for i in 1:nconvAr
     gsarr[i]    = esAr[2][:,i]
     prob_i, indBin  = findmax( abs.(gsarr[i]) )
-    println( format("GS $i : Maximal basis states = {} [{}] N={} p={}",
+    println( KaiEDJ.format("GS $i : Maximal basis states = {} [{}] N={} p={}",
                 HashF[indBin], getbittaili(HashF[indBin]), OpNtot(HashF[indBin]), prob_i ))
 end
 println("")
 for i in 1:nconvAr
     gsarr[i]    = esAr[2][:,i]
     prob_i, indBin  = findmax( abs.(gsarr[i]) )
-    println( format("GS $i : Maximal basis states = {} [{}] N={} p={}",
+    println( KaiEDJ.format("GS $i : Maximal basis states = {} [{}] N={} p={}",
                 HashF[indBin], getbittaili(HashF[indBin]), OpNtot(HashF[indBin]), prob_i ))
     gswf    = WF(dimSub, HashF, gsarr[i], wfargs... )
     gswfres = WF(dimSub, HashF, wfargs... )
-    gswf.Probamp    = collect( dropzeros!( sparse(gswf.Probamp) ) )
+    gswf.Probamp    = collect( KaiEDJ.dropzeros!( KaiEDJ.sparse(gswf.Probamp) ) )
 
 
     for opca in OpSz
@@ -397,7 +398,7 @@ yr2  = GetijarrayFromVecMat( yr2, 1, 1 )
 
 bPlot=true
 if bPlot
-    using Plots
+    using KaiEDJ.Plots
     # writedlm( "log", [  wFreq imag(ydat1) imag(ydat2) imag(ydat1+ydat2) ] ) 
     plot( wFreq, [ imag(ydat) imag(yr2) ] )
 end

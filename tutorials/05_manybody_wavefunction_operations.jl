@@ -1,4 +1,5 @@
-include("../src/mybase.jl")
+#include("../src/mybase.jl")
+using KaiEDJ
 
 
 init_println("PARAMETER SETUP")
@@ -56,25 +57,25 @@ dimN3       = length(hashfsec[isectorN3])
 wfN3_1      = WF(dimN3, hashfsec[isectorN3], hashfinv, isectorN3, Nel )
 v0          = collect(1:dimN3)
 wfN3_1.Probamp = v0
-@show sparse(wfN3_1.Probamp)
+@show KaiEDJ.sparse(wfN3_1.Probamp)
 
 
 println( "" )
 println( "wfN3_2 :: " )
 wfN3_2  = WF(wfN3_1)
-@show sparse(wfN3_2.Probamp)
+@show KaiEDJ.sparse(wfN3_2.Probamp)
 
 println( "OpCAWFadd( tij, wfN3_1, wfN3_2 ) " )
 OpCAWFadd( tij, wfN3_1, wfN3_2 ; outputlevel= 2)
-@show sparse(wfN3_2.Probamp)
+@show KaiEDJ.sparse(wfN3_2.Probamp)
 
 println( "OpCWFadd( cdi, wfN3_1, wfN3_2 ) " )
 OpCWFadd( cdi, wfN3_1, wfN3_2 )
-@show sparse(wfN3_2.Probamp)
+@show KaiEDJ.sparse(wfN3_2.Probamp)
 
 println( "OpAWFadd(  ci, wfN3_1, wfN3_2 ) " )
 OpAWFadd( ci, wfN3_1, wfN3_2 )
-@show sparse(wfN3_2.Probamp)
+@show KaiEDJ.sparse(wfN3_2.Probamp)
 
 println( "" )
 println( "ShowWFBasis(wfN3_1) ") 
@@ -90,7 +91,7 @@ wfN4_1      = WF(dimN4, hashfsec[isectorN4], hashfinv, isectorN4, Nel )
 
 println( "OpCWFadd( cdi, wfN3_1, wfN4_1 ) " )
 OpCWFadd( cdi, wfN3_1, wfN4_1 )
-@show sparse(wfN4_1.Probamp)
+@show KaiEDJ.sparse(wfN4_1.Probamp)
 
 println( "" )
 println( "ShowWFBasis(wfN4_1) ") 
@@ -106,8 +107,8 @@ wfN2_1      = WF(dimN2, hashfsec[isectorN2], hashfinv, isectorN2, Nel )
 
 println( "OpAWFadd( ci, wfN3_1, wfN2_1 ) " )
 OpAWFadd( ci, wfN3_1, wfN2_1 )
-@show sparse(wfN3_1.Probamp)
-@show sparse(wfN2_1.Probamp)
+@show KaiEDJ.sparse(wfN3_1.Probamp)
+@show KaiEDJ.sparse(wfN2_1.Probamp)
 
 println( "" )
 println( "ShowWFBasis(wfN2_1) ") 

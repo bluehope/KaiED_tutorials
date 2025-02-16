@@ -1,5 +1,7 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+# ENV["PROJECT_PATH_ED"]="../envs/KED"
+# include("../src/mybase.jl")
+using KaiEDJ
+using KaiEDJ: I, BenchmarkTools, Optimization, Optim, Plots
 
 norb        = 1
 nspin       = 2
@@ -68,8 +70,8 @@ SParam  = (
     return GetCost( HybwOrig, HybwParam )
 end
 
-using BenchmarkTools
-@time cost = GetCostFromFlatPH( BParamPH, SParam )
+# using BenchmarkTools
+@time cost = KaiEDJ.GetCostFromFlatPH( BParamPH, SParam )
 println( "initial cost : $(cost) " )
 
 
@@ -80,24 +82,24 @@ println( "initial cost : $(cost) " )
 # @show sol.original
 # BParamPHNew   = [ sol... ]
 
-using Optim
-@time res = optimize( x -> GetCostFromFlatPH(x,SParam), BParamPH, LBFGS(), Optim.Options(iterations=4000))
+# using Optim
+@time res = Optim.optimize( x -> KaiEDJ.GetCostFromFlatPH(x,SParam), BParamPH, Optim.LBFGS(), Optim.Options(iterations=4000))
 @show res
 BParamPHNew   = [ res.minimizer... ]
 
 
-@time cost = GetCostFromFlatPH( BParamPHNew, SParam )
+@time cost = KaiEDJ.GetCostFromFlatPH( BParamPHNew, SParam )
 println( "final cost : $(cost) " )
 
-enew, vnew  = BathParamReshapePH( BParamPHNew, nbath )
+enew, vnew  = KaiEDJ.BathParamReshapePH( BParamPHNew, nbath )
 @show enew
 println("vnew :")
 using DelimitedFiles
 writedlm(stdout, vnew)
 
 Eorb        = collect(I(nspinorb)*0.0)
-DiwNew      = GetDeltaHybDiscGridFromFlatPH( BParamPHNew, ImFreqGrid, nspinorb, nbath )
-GiwNew      = GetGreenLocalFromHybGrid( DiwNew, ImFreqGrid, Eorb )
+DiwNew      = KaiEDJ.GetDeltaHybDiscGridFromFlatPH( BParamPHNew, ImFreqGrid, nspinorb, nbath )
+GiwNew      = KaiEDJ.GetGreenLocalFromHybGrid( DiwNew, ImFreqGrid, Eorb )
 
 x   = ImFreqGridVal
 y1  = Hyb11iw
@@ -118,13 +120,19 @@ Gwn         = GetGreenLocalFromHybGrid( DwNew, ReFreqGrid, Eorb )
 
 bPlot = true
 if bPlot
-    using Plots
+    # using Plots
     xw  = ReFreqGridVal
     gw  = Gw
     gwn = GetijarrayFromVecMat( Gwn, 1, 1 ) 
 
-    plot(  xw, [ real(gw)  imag(gw)  ] )
-    plot!( xw, [ real(gwn) imag(gwn) ] )
+    Plots.plot(  xw, [ real(gw)  imag(gw)  ] )
+    Plots.plot!( xw, [ real(gwn) imag(gwn) ] )
+    # set x,y labels
+    Plots.xlabel!( "ReFreq" )
+    Plots.ylabel!( "G" )
+    # set title
+    Plots.title!( "Green's Function Comparison" )
+    Plots.savefig( "output_green_function_impurity_bath_discretization_PH.png" )
 end
 
 

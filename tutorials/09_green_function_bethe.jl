@@ -1,4 +1,5 @@
-include("../src/mybase.jl")
+#include("../src/mybase.jl")
+using KaiEDJ
 
 epsilon = 0.01
 

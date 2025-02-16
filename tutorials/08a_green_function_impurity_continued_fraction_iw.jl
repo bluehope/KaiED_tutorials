@@ -1,4 +1,7 @@
-include("../src/mybase.jl")
+#include("../src/mybase.jl")
+using KaiEDJ
+using KaiEDJ: Printf, Format
+using DelimitedFiles
 
 ### Impurity Setup ###
 norb        = 1
@@ -86,15 +89,15 @@ SParam      = (
 
 
 ### Optimizer ##
-using Optimization
-prob = OptimizationProblem(GetCostFromFlatPH, BParam, SParam)
-using OptimizationOptimJL
+# using Optimization
+prob = KaiEDJ.OptimizationProblem(KaiEDJ.GetCostFromFlatPH, BParam, SParam)
+# using OptimizationOptimJL
 maxiters = 2300
-sol = solve(prob, NelderMead() ; maxiters=maxiters)
+sol = KaiEDJ.OptimizationOptimJL.solve(prob, KaiEDJ.OptimizationOptimJL.NelderMead() ; maxiters=maxiters)
 @show sol.original
 
 BParamNew   = [ sol... ]
-enew, vnew  = BathParamReshapePH( BParamNew, nbathHalf )
+enew, vnew  = KaiEDJ.BathParamReshapePH( BParamNew, nbathHalf )
 println("New parameters for Up")
 @show enew
 writedlm(stdout, vnew)
@@ -103,28 +106,28 @@ writedlm(stdout, vnew)
 
 println("## Spin-dn optimization ##")
 ## Setting BParam ##
-BParamDn    = BathParamFlatten( ebathlDn, VilDn )
-BParamDnPH  = BathParamFlatten( ebathlDn[1:div(end,2)], VilDn )
+BParamDn    = KaiEDJ.BathParamFlatten( ebathlDn, VilDn )
+BParamDnPH  = KaiEDJ.BathParamFlatten( ebathlDn[1:div(end,2)], VilDn )
 BParam      = BParamDnPH
 println("Initial-parameters :")
-@show BathParamReshapePH( BParam, nbathHalf )
+@show KaiEDJ.BathParamReshapePH( BParam, nbathHalf )
 
 ## Setting SParam ##
-Hybiw        = 1. / 4 * GetGzBetheUniformScaling.( ImFreqGrid )
+Hybiw        = 1. / 4 * KaiEDJ.GetGzBetheUniformScaling.( ImFreqGrid )
 SParam  = ( 
                 Hybiw, 
                 ImFreqGrid, 
                 norb, # nspinorb, 
                 nbathHalf
                 )
-@time cost = GetCostFromFlatPH( BParam, SParam )
+@time cost = KaiEDJ.GetCostFromFlatPH( BParam, SParam )
 println( "initial cost : $(cost) " )
 
-prob = OptimizationProblem(GetCostFromFlatPH, BParam, SParam)
-sol = solve(prob, NelderMead())
+prob = KaiEDJ.OptimizationProblem(KaiEDJ.GetCostFromFlatPH, BParam, SParam)
+sol = KaiEDJ.OptimizationOptimJL.solve(prob, KaiEDJ.OptimizationOptimJL.NelderMead())
 @show sol.original
 BParamDnNew   = [ sol... ]
-ednnew, vdnnew  = BathParamReshapePH( BParamDnNew, nbathHalf )
+ednnew, vdnnew  = KaiEDJ.BathParamReshapePH( BParamDnNew, nbathHalf )
 println("New parameters for Dn")
 @show ednnew
 writedlm(stdout, vdnnew)
@@ -146,11 +149,11 @@ writedlm(stdout, Vil)
 ### Binary Basis ###
 println("## Hashing index to binary-basis ##" )
 outputlevel = 0
-hashfsec    = HashingIntToSecarrBin(;norb=ntot, outputlevel=outputlevel)
-hashfinvsec = HashingInvSecarrBinToAllNparInt( hashfsec ; outputlevel=outputlevel)
-hashfinv    = HashingInvSecarrBinToInt( hashfsec ; outputlevel=outputlevel)
-hashfall    = HashingIntToBinall(;norb=ntot, outputlevel=outputlevel)
-hashfallinv = HashingInvBinallToInt( hashfall ; outputlevel=outputlevel)
+hashfsec    = KaiEDJ.HashingIntToSecarrBin(;norb=ntot, outputlevel=outputlevel)
+hashfinvsec = KaiEDJ.HashingInvSecarrBinToAllNparInt( hashfsec ; outputlevel=outputlevel)
+hashfinv    = KaiEDJ.HashingInvSecarrBinToInt( hashfsec ; outputlevel=outputlevel)
+hashfall    = KaiEDJ.HashingIntToBinall(;norb=ntot, outputlevel=outputlevel)
+hashfallinv = KaiEDJ.HashingInvBinallToInt( hashfall ; outputlevel=outputlevel)
 println("## end of Hashing index ##" )
 
 
@@ -159,7 +162,7 @@ println("## end of Hashing index ##" )
 println( "\n## Ordering hashfall ##")
 hashfallOrdered     = vcat( hashfsec... )
 # @show hashfallOrdered     
-hashfallOrderedInv  = HashingInvBinallToInt( hashfallOrdered ; outputlevel=outputlevel)
+hashfallOrderedInv  = KaiEDJ.HashingInvBinallToInt( hashfallOrdered ; outputlevel=outputlevel)
 dimSub      = length(hashfallOrdered)
 HashF       = hashfallOrdered
 HashFInv    = hashfallOrderedInv
@@ -233,17 +236,17 @@ for opca in Op_tij
     ConstructHamil_ij!( H, opca, HashF, HashFInv ; outputlevel=outputlevel)
 end
 
-@show issparse(H.MatSparse)
+@show KaiEDJ.issparse(H.MatSparse)
 @show H.MatSparse
-@show ishermitian(H.MatSparse)
-@show issymmetric(H.MatSparse)
+@show KaiEDJ.ishermitian(H.MatSparse)
+@show KaiEDJ.issymmetric(H.MatSparse)
 @show count(!iszero, H.MatSparse)
 @show size(H.MatSparse)
 
-using Arpack
+# using Arpack
 
 nev     = 10
-esAr    = eigs( H.MatSparse ; which=:SR , nev = nev )
+esAr    = KaiEDJ.Arpack.eigs( H.MatSparse ; which=:SR , nev = nev )
 
 println("Eigensystem from eigs()") 
 @show typeof(esAr)
@@ -255,7 +258,7 @@ println("diff : ", real(esAr[1] .- esAr[1][1]) )
 
 println("")
 println("Ground-states : ")
-println( format("nconv = {}, niter = {} , nmult = {}" ,esAr[3], esAr[4], esAr[5] ) )
+println( Format.format("nconv = {}, niter = {} , nmult = {}" ,esAr[3], esAr[4], esAr[5] ) )
 nconvAr = esAr[3]
 gsarr   = Vector{Any}(undef,nconvAr)
 OpSz        = GetOpSz(ntot)
@@ -265,31 +268,31 @@ Szorbval    = Vector{ComplexF64}(undef,nconvAr)
 for i in 1:nconvAr
     gsarr[i]    = esAr[2][:,i]
     prob_i, indBin  = findmax( abs.(gsarr[i]) )
-    println( format("GS $i : Maximal basis states = {} [{}] N={} p={}",
+    println( Format.format("GS $i : Maximal basis states = {} [{}] N={} p={}",
                 HashF[indBin], getbittaili(HashF[indBin]), OpNtot(HashF[indBin]), prob_i ))
 end
 println("")
 for i in 1:nconvAr
     gsarr[i]    = esAr[2][:,i]
     prob_i, indBin  = findmax( abs.(gsarr[i]) )
-    println( format("GS $i : Maximal basis states = {} [{}] N={} p={}",
+    println( Format.format("GS $i : Maximal basis states = {} [{}] N={} p={}",
                 HashF[indBin], getbittaili(HashF[indBin]), OpNtot(HashF[indBin]), prob_i ))
     gswf    = WF(dimSub, HashF, gsarr[i], wfargs... )
     gswfres = WF(dimSub, HashF, wfargs... )
-    gswf.Probamp    = collect( dropzeros!( sparse(gswf.Probamp) ) )
+    gswf.Probamp    = collect( KaiEDJ.dropzeros!( KaiEDJ.sparse(gswf.Probamp) ) )
 
 
     for opca in OpSz
-        OpCAWFadd( opca, gswf, gswfres ; outputlevel = 0)  
+        KaiEDJ.OpCAWFadd( opca, gswf, gswfres ; outputlevel = 0)  
     end
     Sztot_i = WFInner( gswf, gswfres )
     println( "    : <Sz> = ", Sztot_i )
 
     for opca in OpSzOrb
-        OpCAWFadd( opca, gswf, gswfres ; outputlevel = 0)  
+        KaiEDJ.OpCAWFadd( opca, gswf, gswfres ; outputlevel = 0)  
     end
     gswfres.Probamp = zero(gswfres.Probamp)
-    Szorb_i = WFInner( gswf, gswfres )
+    Szorb_i = KaiEDJ.WFInner( gswf, gswfres )
     println( "    : <Sz_orb> = ", Szorb_i )
 
     Sztotval[i]    += Sztot_i
@@ -384,9 +387,12 @@ yr2  = GetijarrayFromVecMat( yr2, 1, 1 )
 
 bPlot=true
 if bPlot
-    using Plots
+    using KaiEDJ: Plots
     # writedlm( "log", [  ImFreqGridVal imag(ydat1) imag(ydat2) imag(ydat1+ydat2) ] ) 
-    plot( ImFreqGridVal, [ imag(ydat) imag(yr2) ] )
+    Plots.plot( ImFreqGridVal, [ imag(ydat) imag(yr2) ] )
+    Plots.title!("Green's Function Plot")
+    Plots.xlabel!("Frequency")
+    Plots.ylabel!("Imaginary Part")
 end
 
 

@@ -1,5 +1,8 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+# ENV["PROJECT_PATH_ED"]="../envs/KED"
+# include("../src/mybase.jl")
+using KaiEDJ
+using KaiEDJ: BenchmarkTools, Optimization, Optim, Plots
+using DelimitedFiles
 
 norb        = 1
 nspin       = 2
@@ -93,7 +96,7 @@ SParam  = (
                 nbathHalf
                 )
 
-using BenchmarkTools
+# using BenchmarkTools
 @time cost = GetCostFromFlatPH( BParam, SParam )
 println( "initial cost : $(cost) " )
 
@@ -105,8 +108,8 @@ println( "initial cost : $(cost) " )
 # @show sol.original
 # BParamNew   = [ sol... ]
 
-using Optim
-@time res = optimize( x -> GetCostFromFlatPH(x,SParam), BParam, LBFGS(), Optim.Options(iterations=4000))
+# using Optim
+@time res = KaiEDJ.Optim.optimize( x -> GetCostFromFlatPH(x,SParam), BParam, KaiEDJ.Optim.LBFGS(), KaiEDJ.Optim.Options(iterations=4000))
 @show res
 BParamNew   = [ res.minimizer... ]
 
@@ -159,7 +162,7 @@ println( "initial cost : $(cost) " )
 # @show sol.original
 # BParamDnNew   = [ sol... ]
 
-@time res = optimize( x -> GetCostFromFlatPH(x,SParam), BParam, LBFGS(), Optim.Options(iterations=4000))
+@time res =  Optim.optimize( x -> GetCostFromFlatPH(x,SParam), BParam, Optim.LBFGS(), Optim.Options(iterations=4000))
 @show res
 BParamDnNew   = [ res.minimizer... ]
 
@@ -182,8 +185,12 @@ yr2  = GetijarrayFromVecMat( yr2, 1, 1 )
 
 doplot = true
 if doplot
-    using Plots
+    # using Plots
     xr  = ReFreqGridVal
-    plot( xr, [ real(yr1) imag(yr1) ] )
-    plot!( xr, [ real(yr2) imag(yr2) ] )
+    Plots.plot( xr, [ real(yr1) imag(yr1) ] )
+    Plots.plot!( xr, [ real(yr2) imag(yr2) ] )
+    Plots.title!("Green Functions Comparison")
+    Plots.xlabel!("Frequency")
+    Plots.ylabel!("Amplitude")
+    Plots.savefig("Green_Function_Comparison.png")
 end

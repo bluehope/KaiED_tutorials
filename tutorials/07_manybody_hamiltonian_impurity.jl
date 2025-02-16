@@ -1,4 +1,5 @@
-include("../src/mybase.jl")
+#include("../src/mybase.jl")
+using KaiEDJ
 
 norb        = 1
 nspin       = 2
@@ -72,7 +73,7 @@ for opca in Op_ebathl
 end
 
 @show H.MatSparse
-@show issparse(H.MatSparse)
-@show ishermitian(H.MatSparse)
-@show issymmetric(H.MatSparse)
+@show KaiEDJ.issparse(H.MatSparse)
+@show KaiEDJ.ishermitian(H.MatSparse)
+@show KaiEDJ.issymmetric(H.MatSparse)
 @show count(!iszero, H.MatSparse)

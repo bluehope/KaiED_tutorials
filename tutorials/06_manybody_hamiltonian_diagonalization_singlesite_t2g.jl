@@ -1,5 +1,6 @@
-ENV["PROJECT_PATH_ED"]="../envs/KED"
-include("../src/mybase.jl")
+#ENV["PROJECT_PATH_ED"]="../envs/KED"
+#include("../src/mybase.jl")
+using KaiEDJ
 
 norb        = 3
 nspin       = 2
@@ -65,13 +66,13 @@ for opca in tij
     ConstructHamil_ij!( H, opca, HashF, HashFInv ; outputlevel=2 )
 end
 
-@show issparse(H.MatSparse)
+@show KaiEDJ.issparse(H.MatSparse)
 @show H.MatSparse
-@show ishermitian(H.MatSparse)
-@show issymmetric(H.MatSparse)
+@show KaiEDJ.ishermitian(H.MatSparse)
+@show KaiEDJ.issymmetric(H.MatSparse)
 @show count(!iszero, H.MatSparse)
 
-eigensys    = eigen( collect(H.MatSparse) )
+eigensys    = KaiEDJ.eigen( collect(H.MatSparse) )
 
 for evitem in Iterators.enumerate( eigensys.values ) 
     @show evitem
